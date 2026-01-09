@@ -15,7 +15,7 @@ kotlin {
     androidLibrary {
         namespace = "com.dummyshop.shared"
         compileSdk = 36
-        minSdk = 29
+        minSdk = 24
 
         withHostTestBuilder {
         }
@@ -92,6 +92,7 @@ kotlin {
             dependencies {
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.sqldelight.androidDriver)
+                implementation(libs.koin.android)
             }
         }
 
