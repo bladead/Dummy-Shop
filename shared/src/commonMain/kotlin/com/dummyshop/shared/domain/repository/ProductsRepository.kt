@@ -15,4 +15,6 @@ interface ProductsRepository {
     suspend fun refreshProduct(productId: Long): AppResult<Unit>
 
     suspend fun toggleFavorite(productId: Long): AppResult<Unit>
+
+    suspend fun reportBackgrounded(): AppResult<Unit>
 }
