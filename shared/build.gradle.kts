@@ -1,7 +1,10 @@
+import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -73,6 +76,9 @@ kotlin {
                 implementation(libs.sqldelight.coroutinesExtensions)
 
                 implementation(libs.koin.core)
+
+                implementation(libs.sqldelight.runtime)
+                implementation(libs.sqldelight.coroutinesExtensions)
             }
         }
 
@@ -85,6 +91,7 @@ kotlin {
         androidMain {
             dependencies {
                 implementation(libs.ktor.client.okhttp)
+                implementation(libs.sqldelight.androidDriver)
             }
         }
 
@@ -99,8 +106,17 @@ kotlin {
         iosMain {
             dependencies {
                 implementation(libs.ktor.client.darwin)
+                implementation(libs.sqldelight.nativeDriver)
             }
         }
     }
+}
 
+sqldelight {
+    databases {
+        create("DummyShopDatabase") {
+            packageName.set("com.dummyshop.shared.data.local.db")
+            dialect("app.cash.sqldelight:sqlite-3-38-dialect:2.2.1")
+        }
+    }
 }
