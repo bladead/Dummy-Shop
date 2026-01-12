@@ -4,7 +4,10 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.accept
+import io.ktor.client.plugins.logging.DEFAULT
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
@@ -21,15 +24,18 @@ internal fun HttpClientConfig<*>.installCommonPlugins() {
         json(
             Json {
                 ignoreUnknownKeys = true
+                isLenient = true
                 explicitNulls = false
-                coerceInputValues = true
             }
         )
     }
 
+    install(Logging) {
+        logger = Logger.DEFAULT
+        level = LogLevel.ALL
+    }
+
     defaultRequest {
-        accept(ContentType.Application.Json)
         contentType(ContentType.Application.Json)
     }
 }
-

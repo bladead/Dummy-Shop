@@ -16,5 +16,5 @@ class ProductsRemoteDataSource(
         api.getProduct(productId)
 
     suspend fun reportAppBackgrounded(): AppResult<Unit> =
-        api.reportBackground().map { Unit }
+        api.reportBackground().map {}
 }

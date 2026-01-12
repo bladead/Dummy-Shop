@@ -1,3 +1,38 @@
 <resources>
-    <string name="app_name">DummyShop</string>
+    <string name="app_name">Dummy Shop</string>
+
+    <string name="products_title">Products</string>
+    <string name="search_hint">Search by name</string>
+
+    <string name="empty_products">No products found</string>
+    <string name="load_error">Failed to load data</string>
+    <string name="retry">Try again</string>
+
+    <string name="stale_banner">Showing cached data, it may be outdated</string>
+
+    <string name="product_price_value">Price: %1$s</string>
+    <string name="product_category_value">Category: %1$s</string>
+
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+
+    <string name="detail_title">Detail</string>
+    <string name="detail_loading">Loading details…</string>
+    <string name="action_failed">Action failed</string>
+
+    <string name="cd_navigate_back">Go back</string>
+    <string name="cd_add_favorite">Add to favorites</string>
+    <string name="cd_remove_favorite">Remove from favorites</string>
+
+    <string name="error_offline_title">You’re offline</string>
+    <string name="error_offline_message">Check your connection and try again.</string>
+
+    <string name="error_generic_title">Something went wrong</string>
+    <string name="error_generic_message">We couldn’t load data.</string>
+
+    <string name="snackbar_favorite_failed">Couldn’t update favorites</string>
+
+    <string name="banner_offline_cached">You’re offline. Showing cached data.</string>
+    <string name="banner_stale_cached">Showing cached data. It may be outdated.</string>
+
 </resources>

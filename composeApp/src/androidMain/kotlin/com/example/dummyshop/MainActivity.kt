@@ -1,25 +1,37 @@
 package com.example.dummyshop
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.navigation.compose.rememberNavController
+import com.example.dummyshop.navigation.DummyShopNavHost
 
 class MainActivity : ComponentActivity() {
+
+    private var latestIntent: Intent? by mutableStateOf(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        latestIntent = intent
 
         setContent {
-            App()
+            val navController = rememberNavController()
+
+            LaunchedEffect(latestIntent) {
+                latestIntent?.let { navController.handleDeepLink(it) }
+            }
+
+            DummyShopNavHost(navController = navController)
         }
     }
-}
 
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        latestIntent = intent
+    }
 }

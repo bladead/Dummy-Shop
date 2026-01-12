@@ -7,7 +7,9 @@ import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.request
 import kotlinx.coroutines.CancellationException
+import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
 
 internal suspend inline fun <reified T> safeApiCall(
@@ -25,12 +27,12 @@ internal suspend inline fun <reified T> safeApiCall(
         }
     } catch (cancellationException: CancellationException) {
         throw cancellationException
-    } catch (timeoutException: HttpRequestTimeoutException) {
+    } catch (_: HttpRequestTimeoutException) {
         AppResult.Failure(AppError.Network.Timeout)
-    } catch (timeoutException: ConnectTimeoutException) {
+    } catch (_: ConnectTimeoutException) {
         AppResult.Failure(AppError.Network.Timeout)
-    } catch (ioException: kotlinx.io.IOException) {
-        AppResult.Failure(AppError.Network.NoInternet)
+    } catch (ioException: IOException) {
+        AppResult.Failure(AppError.Network.Unknown(ioException.message))
     } catch (serializationException: SerializationException) {
         AppResult.Failure(AppError.Data.Serialization(serializationException.message))
     } catch (throwable: Throwable) {

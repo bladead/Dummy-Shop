@@ -2,7 +2,7 @@ CREATE TABLE product (
   id INTEGER NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  price INTEGER NOT NULL,
+  price REAL NOT NULL,
   category TEXT NOT NULL,
   thumbnail TEXT,
   updated_at_ms INTEGER NOT NULL

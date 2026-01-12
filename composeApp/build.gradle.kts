@@ -32,7 +32,17 @@ kotlin {
 
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
+            implementation(libs.koin.androidx.compose)
+
             implementation(libs.androidx.lifecycle.process)
+            implementation(libs.androidx.navigation.compose)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.androidx.lifecycle.viewmodelCompose)
+
+            implementation(compose.materialIconsExtended)
+            implementation(libs.koin.core.viewmodel)
+            implementation(libs.koin.core.viewmodel.android)
+
         }
         commonMain.dependencies {
             implementation(project(":shared"))

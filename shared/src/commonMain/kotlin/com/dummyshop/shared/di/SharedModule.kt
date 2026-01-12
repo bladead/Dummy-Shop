@@ -1,5 +1,6 @@
 package com.dummyshop.shared.di
 
+import com.dummyshop.shared.data.remote.HttpClientFactory
 import com.dummyshop.shared.data.remote.api.ApiConfig
 import com.dummyshop.shared.data.remote.api.DummyShopApi
 import com.dummyshop.shared.data.remote.datasource.ProductsRemoteDataSource
@@ -16,7 +17,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 fun sharedModule(): Module = module {
-    single { get<com.dummyshop.shared.data.remote.HttpClientFactory>().create() }
+    single { get<HttpClientFactory>().create() }
     single { DummyShopApi(httpClient = get(), baseUrl = ApiConfig.BASE_URL) }
     single { ProductsRemoteDataSource(api = get()) }
 

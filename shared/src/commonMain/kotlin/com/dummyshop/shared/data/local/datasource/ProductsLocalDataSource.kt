@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 class ProductsLocalDataSource(
     private val database: DummyShopDatabase,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) {
 
     fun observeProducts(): Flow<List<ProductSummary>> =
@@ -42,7 +42,11 @@ class ProductsLocalDataSource(
             when {
                 lastSuccessMs == null && lastFailureMs == null -> SyncStatus.Unknown
                 lastFailureMs != null && (lastSuccessMs == null || lastFailureMs > lastSuccessMs) ->
-                    SyncStatus.Stale(lastSuccessAtMs = lastSuccessMs, lastFailureAtMs = lastFailureMs)
+                    SyncStatus.Stale(
+                        lastSuccessAtMs = lastSuccessMs,
+                        lastFailureAtMs = lastFailureMs
+                    )
+
                 lastSuccessMs != null -> SyncStatus.UpToDate(lastSuccessAtMs = lastSuccessMs)
                 else -> SyncStatus.Unknown
             }
@@ -51,7 +55,7 @@ class ProductsLocalDataSource(
 
     suspend fun upsertProducts(
         products: List<LocalUpsertProduct>,
-        nowMs: Long
+        nowMs: Long,
     ) = withContext(dispatchers.io) {
         database.transaction {
             products.forEach { product ->
@@ -59,7 +63,7 @@ class ProductsLocalDataSource(
                     id = product.id,
                     title = product.title,
                     description = product.description,
-                    price = product.price.toLong(),
+                    price = product.price,
                     category = product.category,
                     thumbnail = product.thumbnailUrl,
                     updated_at_ms = nowMs
@@ -70,13 +74,13 @@ class ProductsLocalDataSource(
 
     suspend fun upsertProduct(
         product: LocalUpsertProduct,
-        nowMs: Long
+        nowMs: Long,
     ) = withContext(dispatchers.io) {
         database.dummyShopDatabaseQueries.upsertProduct(
             id = product.id,
             title = product.title,
             description = product.description,
-            price = product.price.toLong(),
+            price = product.price,
             category = product.category,
             thumbnail = product.thumbnailUrl,
             updated_at_ms = nowMs
@@ -85,7 +89,7 @@ class ProductsLocalDataSource(
 
     suspend fun toggleFavorite(
         productId: Long,
-        nowMs: Long
+        nowMs: Long,
     ) = withContext(dispatchers.io) {
         database.transaction {
             val isFavorite = database.dummyShopDatabaseQueries.isFavorite(productId).executeAsOne()
@@ -117,7 +121,7 @@ data class LocalUpsertProduct(
     val id: Long,
     val title: String,
     val description: String,
-    val price: Int,
+    val price: Double,
     val category: String,
-    val thumbnailUrl: String?
+    val thumbnailUrl: String?,
 )

@@ -1,6 +1,8 @@
 package com.example.dummyshop
 
 import android.app.Application
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.example.dummyshop.di.androidUiModule
 import com.example.dummyshop.lifecycle.BackgroundReporter
 import com.dummyshop.shared.di.androidPlatformModule
 import com.dummyshop.shared.di.sharedModule
@@ -8,14 +10,13 @@ import com.dummyshop.shared.domain.usecase.ReportBackgroundedUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.android.get
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import androidx.lifecycle.ProcessLifecycleOwner
 
 class DummyShopApp : Application() {
 
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
@@ -24,7 +25,8 @@ class DummyShopApp : Application() {
             androidContext(this@DummyShopApp)
             modules(
                 sharedModule(),
-                androidPlatformModule()
+                androidPlatformModule(),
+                androidUiModule()
             )
         }
 

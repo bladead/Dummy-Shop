@@ -7,7 +7,7 @@ data class ProductDto(
     val id: Long,
     val title: String,
     val description: String = "",
-    val price: Int,
+    val price: Double,
     val category: String,
     val thumbnail: String? = null
 )

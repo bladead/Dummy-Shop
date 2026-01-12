@@ -9,7 +9,7 @@ internal fun SelectAllProducts.toDomain(): ProductSummary =
     ProductSummary(
         id = id,
         title = title,
-        price = price.toInt(),
+        price = price,
         category = category,
         isFavorite = is_favorite
     )
@@ -19,7 +19,7 @@ internal fun SelectProductById.toDomain(): ProductDetail =
         id = id,
         title = title,
         description = description,
-        price = price.toInt(),
+        price = price,
         category = category,
         thumbnailUrl = thumbnail,
         isFavorite = is_favorite
