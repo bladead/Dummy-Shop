@@ -27,7 +27,7 @@ import com.example.dummyshop.ui.theme.DummyShopTheme
 @Composable
 fun ProductsScreen(
     state: ProductsListUiState,
-    onIntent: (ProductsListIntent) -> Unit,
+    onEvent: (ProductsListEvent) -> Unit,
     snackbarHost: @Composable () -> Unit,
 ) {
     Scaffold(
@@ -44,7 +44,7 @@ fun ProductsScreen(
         ) {
             OutlinedTextField(
                 value = state.query,
-                onValueChange = { onIntent(ProductsListIntent.QueryChanged(it)) },
+                onValueChange = { onEvent(ProductsListEvent.QueryChanged(it)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = DummyShopTheme.spacing.md),
@@ -75,7 +75,7 @@ fun ProductsScreen(
                             }
                         ),
                         actionLabel = stringResource(R.string.retry),
-                        onAction = { onIntent(ProductsListIntent.Retry) },
+                        onAction = { onEvent(ProductsListEvent.Retry) },
                         isOffline = isOffline,
                         contentPadding = PaddingValues(top = DummyShopTheme.spacing.xl)
                     )
@@ -93,6 +93,7 @@ fun ProductsScreen(
                         val (textRes, canRetry) = when (banner) {
                             is ProductsListBanner.OfflineCached ->
                                 R.string.banner_offline_cached to banner.canRetry
+
                             is ProductsListBanner.StaleCached ->
                                 R.string.banner_stale_cached to banner.canRetry
                         }
@@ -101,7 +102,7 @@ fun ProductsScreen(
                             text = stringResource(textRes),
                             actionLabel = stringResource(R.string.retry),
                             actionEnabled = canRetry,
-                            onAction = { onIntent(ProductsListIntent.Retry) },
+                            onAction = { onEvent(ProductsListEvent.Retry) },
                             modifier = Modifier.padding(top = DummyShopTheme.spacing.md)
                         )
                     }
@@ -121,8 +122,8 @@ fun ProductsScreen(
                         ) { item ->
                             ProductCard(
                                 item = item,
-                                onClick = { onIntent(ProductsListIntent.OpenProduct(item.id)) },
-                                onToggleFavorite = { onIntent(ProductsListIntent.ToggleFavorite(item.id)) },
+                                onClick = { onEvent(ProductsListEvent.OpenProduct(item.id)) },
+                                onToggleFavorite = { onEvent(ProductsListEvent.ToggleFavorite(item.id)) },
                                 modifier = Modifier,
                             )
                         }

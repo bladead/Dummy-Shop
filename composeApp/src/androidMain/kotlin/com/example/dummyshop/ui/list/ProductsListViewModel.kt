@@ -15,12 +15,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.SharingStarted
 
 class ProductsListViewModel(
     private val observeProductsUseCase: ObserveProductsUseCase,
@@ -31,7 +28,7 @@ class ProductsListViewModel(
 
     private data class State(
         val query: String = "",
-        val products: List<ProductSummary> = emptyList(),
+        val allProducts: List<ProductSummary> = emptyList(),
         val syncStatus: SyncStatus? = null,
         val isRefreshing: Boolean = false,
         val lastRefreshError: AppError? = null,
@@ -42,53 +39,84 @@ class ProductsListViewModel(
 
     private val state = MutableStateFlow(State())
 
-    val uiState: StateFlow<ProductsListUiState> =
-        state
-            .map { it.toUiState() }
-            .distinctUntilChanged()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = ProductsListUiState()
-            )
+    private val _uiState = MutableStateFlow(ProductsListUiState())
+    val uiState: StateFlow<ProductsListUiState> = _uiState.asStateFlow()
 
     private val _effects = MutableSharedFlow<ProductsListEffect>(extraBufferCapacity = 64)
     val effects = _effects.asSharedFlow()
 
-    fun onIntent(intent: ProductsListIntent) {
-        when (intent) {
-            ProductsListIntent.ScreenStarted -> startIfNeeded()
+    fun bind() {
+        val s = state.value
+        if (s.started) return
 
-            is ProductsListIntent.QueryChanged ->
-                state.update { it.copy(query = intent.value) }
+        state.update { it.copy(started = true) }
+        render()
 
-            ProductsListIntent.Retry ->
-                refresh()
+        viewModelScope.launch {
+            observeProductsUseCase().collect { products ->
+                onInternal(InternalIntent.ProductsUpdated(products))
+            }
+        }
 
-            is ProductsListIntent.OpenProduct ->
+        viewModelScope.launch {
+            observeSyncStatusUseCase().collect { status ->
+                onInternal(InternalIntent.SyncStatusUpdated(status))
+            }
+        }
+
+        refresh()
+    }
+
+    fun onEvent(event: ProductsListEvent) {
+        when (event) {
+            ProductsListEvent.Retry -> refresh()
+
+            is ProductsListEvent.QueryChanged -> {
+                state.update { it.copy(query = event.value) }
+                render()
+            }
+
+            is ProductsListEvent.OpenProduct -> {
                 viewModelScope.launch {
-                    _effects.emit(ProductsListEffect.NavigateToDetail(intent.id))
+                    _effects.emit(ProductsListEffect.NavigateToDetail(event.id))
                 }
+            }
 
-            is ProductsListIntent.ToggleFavorite ->
-                toggleFavorite(intent.id)
+            is ProductsListEvent.ToggleFavorite -> toggleFavorite(event.id)
+        }
+    }
 
-            is ProductsListIntent.ProductsUpdated ->
-                state.update { it.copy(products = intent.products, hasLoadedOnce = true) }
+    private fun onInternal(intent: InternalIntent) {
+        when (intent) {
+            is InternalIntent.ProductsUpdated -> {
+                state.update {
+                    it.copy(
+                        allProducts = intent.products,
+                        hasLoadedOnce = true
+                    )
+                }
+                render()
+            }
 
-            is ProductsListIntent.SyncStatusUpdated ->
+            is InternalIntent.SyncStatusUpdated -> {
                 state.update { it.copy(syncStatus = intent.status) }
+                render()
+            }
 
-            is ProductsListIntent.RefreshFinished ->
+            is InternalIntent.RefreshFinished -> {
                 state.update {
                     it.copy(
                         isRefreshing = false,
                         lastRefreshError = intent.error
                     )
                 }
+                render()
+            }
 
-            is ProductsListIntent.ToggleFavoriteFinished -> {
+            is InternalIntent.ToggleFavoriteFinished -> {
                 state.update { it.copy(togglingIds = it.togglingIds - intent.id) }
+                render()
+
                 if (intent.error != null) {
                     viewModelScope.launch {
                         _effects.emit(
@@ -102,37 +130,17 @@ class ProductsListViewModel(
         }
     }
 
-    private fun startIfNeeded() {
-        val current = state.value
-        if (current.started) return
-
-        state.update { it.copy(started = true) }
-
-        viewModelScope.launch {
-            observeProductsUseCase().collect { products ->
-                onIntent(ProductsListIntent.ProductsUpdated(products))
-            }
-        }
-
-        viewModelScope.launch {
-            observeSyncStatusUseCase().collect { status ->
-                onIntent(ProductsListIntent.SyncStatusUpdated(status))
-            }
-        }
-
-        refresh()
-    }
-
     private fun refresh() {
         val s = state.value
         if (s.isRefreshing) return
 
         state.update { it.copy(isRefreshing = true, lastRefreshError = null) }
+        render()
 
         viewModelScope.launch {
             val result = refreshProductsUseCase()
             val error = (result as? AppResult.Failure)?.error
-            onIntent(ProductsListIntent.RefreshFinished(error))
+            onInternal(InternalIntent.RefreshFinished(error))
         }
     }
 
@@ -141,19 +149,24 @@ class ProductsListViewModel(
         if (s.togglingIds.contains(productId)) return
 
         state.update { it.copy(togglingIds = it.togglingIds + productId) }
+        render()
 
         viewModelScope.launch {
             val result = toggleFavoriteUseCase(productId)
             val error = (result as? AppResult.Failure)?.error
-            onIntent(ProductsListIntent.ToggleFavoriteFinished(productId, error))
+            onInternal(InternalIntent.ToggleFavoriteFinished(productId, error))
         }
     }
 
+    private fun render() {
+        _uiState.value = state.value.toUiState()
+    }
+
     private fun State.toUiState(): ProductsListUiState {
-        val filtered = products.filterByQuery(query)
+        val filteredProducts = allProducts.filterByQuery(query)
         val canRetry = !isRefreshing
 
-        val hasCache = products.isNotEmpty()
+        val hasCache = allProducts.isNotEmpty()
         val banner: ProductsListBanner? = when {
             hasCache && lastRefreshError is AppError.Network.NoInternet ->
                 ProductsListBanner.OfflineCached(canRetry)
@@ -174,12 +187,12 @@ class ProductsListViewModel(
                     canRetry = canRetry
                 )
 
-            hasLoadedOnce && filtered.isEmpty() ->
+            hasLoadedOnce && filteredProducts.isEmpty() ->
                 ProductsListUiState.Screen.Empty(canRetry = canRetry)
 
             else ->
                 ProductsListUiState.Screen.Content(
-                    items = filtered,
+                    items = filteredProducts,
                     togglingIds = togglingIds,
                     banner = banner
                 )

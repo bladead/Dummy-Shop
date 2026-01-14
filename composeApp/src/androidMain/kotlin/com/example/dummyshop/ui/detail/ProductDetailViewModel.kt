@@ -30,7 +30,6 @@ class ProductDetailViewModel(
     val effects = _effects.asSharedFlow()
 
     private val productIdFlow = MutableStateFlow<Long?>(null)
-    private var currentProductId: Long? = null
 
     init {
         viewModelScope.launch {
@@ -45,8 +44,7 @@ class ProductDetailViewModel(
     }
 
     fun bind(productId: Long) {
-        if (currentProductId == productId) return
-        currentProductId = productId
+        if (productIdFlow.value == productId) return
 
         _uiState.value = ProductDetailUiState(
             screen = ProductDetailUiState.Screen.Loading,
@@ -64,12 +62,12 @@ class ProductDetailViewModel(
             }
 
             ProductDetailEvent.Retry -> {
-                val id = currentProductId ?: return
+                val id = productIdFlow.value ?: return
                 refresh(id)
             }
 
             ProductDetailEvent.ToggleFavorite -> {
-                val id = currentProductId ?: return
+                val id = productIdFlow.value ?: return
                 toggleFavorite(id)
             }
         }
@@ -154,7 +152,7 @@ class ProductDetailViewModel(
 
         viewModelScope.launch {
             val result = refreshProductUseCase(productId)
-            if (currentProductId != productId) return@launch
+            if (productIdFlow.value != productId) return@launch
 
             val error = (result as? AppResult.Failure)?.error
             onInternal(InternalIntent.RefreshFinished(error))
@@ -169,7 +167,7 @@ class ProductDetailViewModel(
 
         viewModelScope.launch {
             val result = toggleFavoriteUseCase(productId)
-            if (currentProductId != productId) return@launch
+            if (productIdFlow.value != productId) return@launch
 
             val error = (result as? AppResult.Failure)?.error
             onInternal(InternalIntent.ToggleFavoriteFinished(error))

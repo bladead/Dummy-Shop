@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.dummyshop.shared.core.result.AppError
 import com.dummyshop.shared.domain.model.ProductSummary
+import com.dummyshop.shared.domain.model.SyncStatus
 
 @Immutable
 data class ProductsListUiState(
@@ -39,19 +40,11 @@ sealed interface ProductsListBanner {
 
 enum class ProductsListErrorKind { Offline, Generic }
 
-sealed interface ProductsListIntent {
-    data object ScreenStarted : ProductsListIntent
-    data class QueryChanged(val value: String) : ProductsListIntent
-    data object Retry : ProductsListIntent
-    data class OpenProduct(val id: Long) : ProductsListIntent
-    data class ToggleFavorite(val id: Long) : ProductsListIntent
-
-    data class ProductsUpdated(val products: List<ProductSummary>) : ProductsListIntent
-    data class SyncStatusUpdated(val status: com.dummyshop.shared.domain.model.SyncStatus) :
-        ProductsListIntent
-
-    data class RefreshFinished(val error: AppError?) : ProductsListIntent
-    data class ToggleFavoriteFinished(val id: Long, val error: AppError?) : ProductsListIntent
+sealed interface ProductsListEvent {
+    data object Retry : ProductsListEvent
+    data class QueryChanged(val value: String) : ProductsListEvent
+    data class OpenProduct(val id: Long) : ProductsListEvent
+    data class ToggleFavorite(val id: Long) : ProductsListEvent
 }
 
 sealed interface ProductsListEffect {
@@ -59,7 +52,14 @@ sealed interface ProductsListEffect {
     data class ShowSnackbar(@StringRes val messageRes: Int) : ProductsListEffect
 }
 
-fun AppError.toUiKind(): ProductsListErrorKind = when (this) {
+internal sealed interface InternalIntent {
+    data class ProductsUpdated(val products: List<ProductSummary>) : InternalIntent
+    data class SyncStatusUpdated(val status: SyncStatus) : InternalIntent
+    data class RefreshFinished(val error: AppError?) : InternalIntent
+    data class ToggleFavoriteFinished(val id: Long, val error: AppError?) : InternalIntent
+}
+
+internal fun AppError.toUiKind(): ProductsListErrorKind = when (this) {
     is AppError.Network.NoInternet -> ProductsListErrorKind.Offline
     else -> ProductsListErrorKind.Generic
 }

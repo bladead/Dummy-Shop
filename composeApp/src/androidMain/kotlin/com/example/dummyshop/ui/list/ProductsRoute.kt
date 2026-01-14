@@ -19,7 +19,7 @@ fun ProductsRoute(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.onIntent(ProductsListIntent.ScreenStarted)
+        viewModel.bind()
     }
 
     LaunchedEffect(Unit) {
@@ -36,7 +36,7 @@ fun ProductsRoute(
 
     ProductsScreen(
         state = state,
-        onIntent = viewModel::onIntent,
+        onEvent = viewModel::onEvent,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     )
 }
